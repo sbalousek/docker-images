@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (c) 2017 Oracle and/or its affiliates.  All rights reserved.
+# Copyright (c) 2017, 2019 Oracle and/or its affiliates.  All rights reserved.
 # Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 #
@@ -20,8 +20,8 @@ function getCommand {
         command=$(command -v ${check} 2>/dev/null) && break
     done
     [[ -z "${command}" ]] && {
-        [[ ! -z "${alternate}" ]] && echo "Error: Cannot locate command ${primary} or ${alternate}" \
-                                  || echo "Error: Cannot locate command ${primary}"
+        [[ -n "${alternate}" ]] && echo "Error: Cannot locate command ${primary} or ${alternate}" \
+                                || echo "Error: Cannot locate command ${primary}"
         exit 1
     }
     cmdname=$(echo ${primary} | tr a-z A-Z)
@@ -47,9 +47,10 @@ getCommand tar      gtar
 if [[ "${1:--h}" == "-h" ]]; then
     echo "Oracle GoldenGate distribution ZIP file not specified."
     echo ""
-    echo "Usage: $(${BASENAME} $0) [-h | <ogg-zip-file-name>] [<docker-build-options> ...]"
+    echo "Usage: $(${BASENAME} $0) [-h | <ogg-zip-file-name> [12c 18c 19c]] [<docker-build-options> ...]"
     echo "Where:"
     echo "  ogg-zip-file-name       Name of OGG ZIP file"
+    echo "  12c 18c 19c             Verion of source or target Oracle database (default is 12c)"
     echo "  docker-build-options    Command line options for Docker build"
     echo ""
     echo "Example:"
@@ -72,12 +73,26 @@ function getTargetFilename {
     fi
 }
 
+function getTargetVersion {
+    case "$1" in
+        "12c" | "18c" | "19c")
+            OGG_DIST_VERSION="$1"
+            return 0
+            ;;
+        *)
+            OGG_DIST_VERSION="12c"
+            ;;
+    esac
+    return 1
+}
+
 OGG_DISTFILE="$(getTargetFilename $1)"
 if [[ ! -f "${OGG_DISTFILE}" ]]; then
     echo "Oracle GoldenGate distribution ZIP file '$1' not found."
     exit 1
 fi
 shift
+getTargetVersion "$1" && shift
 pushd "$(${DIRNAME} $(command -v $0))" &>/dev/null
 
 function cleanupAndExit {
@@ -89,7 +104,7 @@ trap cleanupAndExit SIGTERM SIGINT
 
 if [[ "${OGG_DISTFILE/.zip/}" != "${OGG_DISTFILE}" ]]; then
     getCommand unzip
-    targetJAR="*/Disk1/stage/Components/oracle.oggcore.*ora12c/*/1/DataFiles/filegroup1.jar"
+    targetJAR="*/Disk1/stage/Components/oracle.oggcore.*ora${OGG_DIST_VERSION}/*/1/DataFiles/filegroup1.jar"
     OGG_JARFILE="$(${UNZIP} -qp ${OGG_DISTFILE} ${targetJAR} 2>/dev/null > $(${BASENAME} ${targetJAR}) && echo $(${BASENAME} ${targetJAR}) || rm $(${BASENAME} ${targetJAR}))"
     [[ "${OGG_JARFILE}" != "" ]] && {
         OGG_TARFILE="$(${BASENAME} ${OGG_DISTFILE} .zip).tar"
@@ -111,12 +126,20 @@ fi
 
 function getVersion {
     local      Version=$(${STRINGS} $1 2>/dev/null | ${AWK} '/^Version[ ]1/ {print $2; exit 0;}')
-    [[ ! -z  ${Version} ]] && \
+    [[ -n    ${Version} ]] && \
         echo ${Version}
 }
 
+function hasTag {
+    while [[ -n "$1" ]]; do
+        [[ "$1" == "--tag" || "$1" == "-t" ]] && return 0
+        shift
+    done
+    return 1
+}
+
 mkdir   ggstar
-[[ ! -z "${OGG_JARFILE}" ]] && {
+[[ -n "${OGG_JARFILE}" ]] && {
     getCommand unzip
     ${UNZIP} -q  ${OGG_JARFILE} -d ggstar
     rm       -f  ${OGG_JARFILE}
@@ -138,14 +161,17 @@ ${FIND}    ggstar -type f \( -name '*.so*' -o -not -name '*.*' \) -exec chmod +x
 ${TAR} Ccf ggstar ${OGG_TARFILE} --owner=54321 --group=54321 .
 rm -fr     ggstar
 
-[[ ! -z "${BASE_IMAGE}"  ]] && BASE_IMAGE_ARG="--build-arg BASE_IMAGE=${BASE_IMAGE}"
-[[ ! -z "${http_proxy}"  ]] && HTTP_PROXY_ARG="--build-arg http_proxy=${http_proxy}"
-[[ ! -z "${https_proxy}" ]] && HTTPS_PROXY_ARG="--build-arg https_proxy=${https_proxy}"
+[[ -n "${BASE_IMAGE}"  ]] && BASE_IMAGE_ARG="--build-arg BASE_IMAGE=${BASE_IMAGE}"
+[[ -n "${http_proxy}"  ]] && HTTP_PROXY_ARG="--build-arg http_proxy=${http_proxy}"
+[[ -n "${https_proxy}" ]] && HTTPS_PROXY_ARG="--build-arg https_proxy=${https_proxy}"
+if ( ! hasTag "$@" ); then
+    DEFAULT_TAG="--tag oracle/goldengate-${OGG_EDITION}:${OGG_VERSION}"
+fi
 
 "${DOCKER}" build ${BASE_IMAGE_ARG} \
                 ${HTTP_PROXY_ARG} ${HTTPS_PROXY_ARG} \
                 --build-arg OGG_VERSION=${OGG_VERSION} \
                 --build-arg OGG_EDITION=${OGG_EDITION} \
                 --build-arg OGG_TARFILE=${OGG_TARFILE} \
-                --tag oracle/goldengate-${OGG_EDITION}:${OGG_VERSION} "$@" .
+                ${DEFAULT_TAG} "$@" .
 cleanupAndExit $?

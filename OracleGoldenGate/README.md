@@ -264,4 +264,4 @@ All scripts and files hosted in this project and GitHub [docker-images/OracleGol
 To download and run Oracle GoldenGate, regardless whether inside or outside a Docker container, you must download the binaries from the [Oracle Technology Network](http://www.oracle.com/technetwork/middleware/goldengate/downloads/index.html) and accept the license indicated at that page.
 
 ## Copyright
-Copyright &copy; 2017 Oracle and/or its affiliates. All rights reserved.
+Copyright &copy; 2017, 2019 Oracle and/or its affiliates. All rights reserved.
