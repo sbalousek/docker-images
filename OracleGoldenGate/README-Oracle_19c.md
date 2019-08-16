@@ -5,6 +5,7 @@ Instructions for creating a Docker image with the Oracle Instant Client 19c and 
 ## Contents
 
 * [Before You Start](#before-you-start)
+* [Clone This Git Repository](#clone-this-git-repository)
 * [Create a Base Docker Image for Oracle Instant Client 19c](#create-a-base-docker-image-for-oracle-instant-client-19c)
 * [Create the Oracle GoldenGate Docker Image for Oracle Database 19c](#create-the-oracle-goldengate-docker-image-for-oracle-database-19c)
 * [Create a Docker container with Oracle GoldenGate for Oracle 19c](#create-a-docker-container-with-oracle-goldengate-for-oracle-19c)
@@ -28,6 +29,12 @@ To build the images, use the [dockerBuild.sh](dockerBuild.sh) script or follow t
 **IMPORTANT:** You must download the installation binaries of Oracle GoldenGate. You only need to provide the binaries for the version you plan to install. The binaries can be downloaded from the [Oracle Technology Network](http://www.oracle.com/technetwork/middleware/goldengate/downloads/index.html). Do not uncompress the Oracle GoldenGate ZIP file. The `dockerBuild.sh` script will handle that for you. You also must have Internet connectivity when building the Docker image for the package manager to perform additional software installations.
 
 For more information about Oracle GoldenGate please see the [Oracle GoldenGate 19.1 On-line Documentation](https://docs.oracle.com/en/middleware/goldengate/core/19.1/index.html).
+
+## Clone This Git Repository
+The contents of this Git repository must be cloned to your local environment. Use these commands:
+
+    git clone -b Oracle19c https://github.com/sbalousek/docker-images.git
+    cd ./docker-images/OracleGoldenGate/
 
 ## Create a Base Docker Image for Oracle Instant Client 19c
 Use these commands to create the base Docker image that contains Oracle Instant Client 19.
