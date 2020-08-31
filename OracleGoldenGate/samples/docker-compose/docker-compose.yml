@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+    gg_src:
+      image: ${SOURCE_IMAGE}
+      environment:
+        - OGG_SCHEMA=${OGG_SCHEMA}
+        - OGG_ADMIN=${OGG_ADMIN}
+        - OGG_ADMIN_PWD=${OGG_ADMIN_PWD}
+        - OGG_DEPLOYMENT=${SOURCE_OGG_DEPLOYMENT}
+      ports:
+        - "${SOURCE_HTTPS_PORT}:443"
+      volumes:
+        - ${SOURCE_LOCALDIR}/ogg:/u02/ogg
+        - ${SOURCE_LOCALDIR}/BR:/u02/ogg/${SOURCE_OGG_DEPLOYMENT}/var/run/BR
+        - ${SOURCE_LOCALDIR}/CM:/u02/ogg/${SOURCE_OGG_DEPLOYMENT}/var/temp
+        - ${TRAILS_LOCALDIR}:/u02/ogg/${SOURCE_OGG_DEPLOYMENT}/var/lib/data
+    gg_tgt:
+      image: ${TARGET_IMAGE}
+      environment:
+        - OGG_SCHEMA=${OGG_SCHEMA}
+        - OGG_ADMIN=${OGG_ADMIN}
+        - OGG_ADMIN_PWD=${OGG_ADMIN_PWD}
+        - OGG_DEPLOYMENT=${TARGET_OGG_DEPLOYMENT}
+      ports:
+        - "${TARGET_HTTPS_PORT}:443"
+      volumes:
+        - ${TARGET_LOCALDIR}/ogg:/u02/ogg
+        - ${TARGET_LOCALDIR}/BR:/u02/ogg/${TARGET_OGG_DEPLOYMENT}/var/run/BR
+        - ${TARGET_LOCALDIR}/CM:/u02/ogg/${TARGET_OGG_DEPLOYMENT}/var/temp
+        - ${TRAILS_LOCALDIR}:/u02/ogg/${TARGET_OGG_DEPLOYMENT}/var/lib/data
