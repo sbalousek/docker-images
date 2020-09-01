@@ -34,7 +34,7 @@ different database versions.
 |SOURCE_OGG_DEPLOYMENT|Source|Name used by source deployment
 |SOURCE_HTTPS_PORT|7443|HTTPS port number for source Oracle GoldenGate Web UI and API, needs to differ from target
 |SOURCE_LOCALDIR|/scratch/ogg_src|Local directory used for source deployment configuration and temporary files
-|TARGET_IMAGE|oracle/goldengate-microservices:oradb18|Docker image used for target deployment
+|TARGET_IMAGE|oracle/goldengate-microservices:oradb19|Docker image used for target deployment
 |TARGET_OGG_DEPLOYMENT|Target|Name used by target deployment
 |TARGET_HTTPS_PORT|8443|HTTPS port number for target Oracle GoldenGate Web UI and API, needs to differ from source
 |TARGET_LOCALDIR|/scratch/ogg_tgt|Local directory used for target deployment configuration and temporary files
